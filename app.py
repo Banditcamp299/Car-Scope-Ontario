@@ -3,7 +3,7 @@ import os
 import logging
 from flask import Flask, render_template, request, jsonify
 from playwright.async_api import async_playwright
-from playwright_stealth import stealth_async
+from playwright_stealth import stealth
 from bs4 import BeautifulSoup
 
 # Configure Logging
@@ -27,7 +27,7 @@ async def scrape_logic(params):
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
             )
             page = await context.new_page()
-            await stealth_async(page)
+            await stealth(page)
 
             postal = params.get('postal', 'M5V1J2').replace(" ", "")
             radius = params.get('radius', '100')
