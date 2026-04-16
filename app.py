@@ -1,7 +1,7 @@
 import asyncio
 from flask import Flask, render_template, request, jsonify
 from playwright.async_api import async_playwright
-from playwright_stealth import stealth_async
+from playwright_stealth import stealth
 from bs4 import BeautifulSoup
 import os
 
@@ -15,7 +15,7 @@ async def scrape_autotrader(params):
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
         )
         page = await context.new_page()
-        await stealth_async(page)
+        await stealth(page)
 
         # Construct URL (Simplified for example)
         # Note: In production, map 'make' and 'postal' into the query string
