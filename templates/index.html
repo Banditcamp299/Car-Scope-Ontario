@@ -1,47 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vehicle Finder — Ontario Deals</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        body { background-color: #09090b; color: #fafafa; }
+    </style>
 </head>
-<body class="bg-gray-50 text-sm">
+<body class="antialiased">
 
-    <div x-data="vehicleApp()" class="max-w-7xl mx-auto p-4">
+    <div x-data="vehicleApp()" class="max-w-7xl mx-auto p-4 lg:p-8" x-cloak>
+        
         <!-- Header -->
-        <header class="mb-6">
-            <h1 class="text-2xl font-bold text-slate-800">Vehicle Finder — Ontario Deals</h1>
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-black tracking-tight text-white">
+                VEHICLE <span class="text-blue-500">FINDER</span>
+                <span class="text-xs font-normal text-zinc-500 block">Ontario, Canada Real-time Scanner</span>
+            </h1>
+            <div class="text-right">
+                <span class="text-xs text-zinc-500 uppercase font-bold tracking-widest">Status</span>
+                <div class="flex items-center gap-2">
+                    <div class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-sm font-medium">System Online</span>
+                </div>
+            </div>
         </header>
 
         <!-- Top Control Bar -->
-        <div class="bg-white p-4 rounded-lg shadow-sm border mb-4 flex flex-wrap gap-4 items-end">
-            <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">POSTAL CODE</label>
-                <input x-model="form.postal" type="text" placeholder="A1A 1A1" class="border p-2 rounded w-32 focus:ring-2 focus:ring-blue-500 outline-none">
+        <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-2xl mb-4">
+            <div class="flex flex-wrap gap-6 items-end">
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-wider">Postal Code</label>
+                    <input x-model="form.postal" type="text" class="w-full bg-zinc-950 border border-zinc-800 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-white">
+                </div>
+                <div class="w-32">
+                    <label class="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-wider">Radius (km)</label>
+                    <input x-model="form.radius" type="number" class="w-full bg-zinc-950 border border-zinc-800 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-white">
+                </div>
+                <div class="flex items-center gap-3 bg-zinc-950 border border-zinc-800 p-3 rounded-xl cursor-pointer">
+                    <input x-model="form.privateOnly" type="checkbox" id="private" class="h-5 w-5 rounded border-zinc-700 bg-zinc-800 text-blue-600 focus:ring-blue-500">
+                    <label for="private" class="text-sm font-semibold select-none">Private Only</label>
+                </div>
+                <button @click="scanDeals" :disabled="loading" 
+                    class="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 text-white font-black py-4 px-10 rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] flex items-center gap-3">
+                    <template x-if="loading">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </template>
+                    <span x-text="loading ? 'SCANNING...' : 'SCAN NOW'"></span>
+                </button>
             </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">RADIUS (KM)</label>
-                <input x-model="form.radius" type="number" class="border p-2 rounded w-24 outline-none">
-            </div>
-            <div class="flex items-center self-center mt-6">
-                <input x-model="form.privateOnly" type="checkbox" id="private" class="mr-2 h-4 w-4">
-                <label for="private" class="font-medium">Private Only</label>
-            </div>
-            <button @click="scanDeals" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded ml-auto flex items-center">
-                <template x-if="loading">
-                    <svg class="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full" viewBox="0 0 24 24"></svg>
-                </template>
-                SCAN NOW
-            </button>
         </div>
 
-        <!-- Secondary Filter Bar -->
-        <div class="bg-white p-4 rounded-lg shadow-sm border mb-6 grid grid-cols-2 md:grid-cols-6 gap-4">
+        <!-- Filter Bar -->
+        <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl mb-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">MANUFACTURER</label>
-                <select x-model="form.make" class="w-full border p-2 rounded outline-none">
+                <label class="block text-[10px] font-black text-zinc-500 mb-2 uppercase tracking-widest">Manufacturer</label>
+                <select x-model="form.make" class="w-full bg-zinc-950 border border-zinc-800 p-2.5 rounded-lg text-sm">
                     <option value="All">All Makes</option>
                     <option value="Ford">Ford</option>
                     <option value="Honda">Honda</option>
@@ -50,90 +68,88 @@
                 </select>
             </div>
             <div class="flex gap-2">
-                <div class="w-1/2">
-                    <label class="block text-xs font-bold text-gray-500 mb-1">MIN YEAR</label>
-                    <input x-model="form.minYear" type="number" placeholder="2010" class="w-full border p-2 rounded">
+                <div>
+                    <label class="block text-[10px] font-black text-zinc-500 mb-2 uppercase tracking-widest">Min Year</label>
+                    <input x-model="form.minYear" type="number" placeholder="2015" class="w-full bg-zinc-950 border border-zinc-800 p-2.5 rounded-lg text-sm">
                 </div>
-                <div class="w-1/2">
-                    <label class="block text-xs font-bold text-gray-500 mb-1">MAX YEAR</label>
-                    <input x-model="form.maxYear" type="number" placeholder="2024" class="w-full border p-2 rounded">
+                <div>
+                    <label class="block text-[10px] font-black text-zinc-500 mb-2 uppercase tracking-widest">Max Year</label>
+                    <input x-model="form.maxYear" type="number" placeholder="2024" class="w-full bg-zinc-950 border border-zinc-800 p-2.5 rounded-lg text-sm">
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">MAX PRICE ($)</label>
-                <input x-model="form.maxPrice" type="number" class="w-full border p-2 rounded">
+                <label class="block text-[10px] font-black text-zinc-500 mb-2 uppercase tracking-widest">Max Price</label>
+                <input x-model="form.maxPrice" type="number" placeholder="50000" class="w-full bg-zinc-950 border border-zinc-800 p-2.5 rounded-lg text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">MAX MILEAGE (KM)</label>
-                <input x-model="form.maxMileage" type="number" class="w-full border p-2 rounded">
+                <label class="block text-[10px] font-black text-zinc-500 mb-2 uppercase tracking-widest">Max Km</label>
+                <input x-model="form.maxMileage" type="number" placeholder="150000" class="w-full bg-zinc-950 border border-zinc-800 p-2.5 rounded-lg text-sm">
             </div>
-            <div class="flex items-center mt-5">
-                <input x-model="form.newOnly" type="checkbox" id="newOnly" class="mr-2">
-                <label for="newOnly">New Only</label>
+            <div class="flex items-center gap-2 pt-6">
+                <input x-model="form.newOnly" type="checkbox" id="newOnly" class="h-4 w-4 rounded border-zinc-700 bg-zinc-800">
+                <label for="newOnly" class="text-xs font-bold text-zinc-300 uppercase">New Listings</label>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">SORT BY</label>
-                <select class="w-full border p-2 rounded outline-none">
+                <label class="block text-[10px] font-black text-zinc-500 mb-2 uppercase tracking-widest">Sort</label>
+                <select class="w-full bg-zinc-950 border border-zinc-800 p-2.5 rounded-lg text-sm">
                     <option>Best Deal</option>
                     <option>Price: Low-High</option>
-                    <option>Price: High-Low</option>
+                    <option>Mileage: Low-High</option>
                 </select>
             </div>
         </div>
 
-        <!-- Data Table -->
-        <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-100 text-gray-600 text-xs font-bold">
-                    <tr>
-                        <th class="p-3">PHOTO</th>
-                        <th class="p-3">SOURCE</th>
-                        <th class="p-3">YEAR</th>
-                        <th class="p-3">MAKE/MODEL</th>
-                        <th class="p-3">TRIM</th>
-                        <th class="p-3">MILEAGE</th>
-                        <th class="p-3">PRICE</th>
-                        <th class="p-3 text-blue-600">vs WHOLESALE</th>
-                        <th class="p-3 text-green-600">vs MARKET</th>
-                        <th class="p-3">CITY</th>
-                        <th class="p-3">LINK</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <template x-for="car in results" :key="car.url">
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="p-3"><img :src="car.photo" class="w-16 h-12 object-cover rounded shadow-sm"></td>
-                            <td class="p-3 font-medium text-xs" x-text="car.source"></td>
-                            <td class="p-3" x-text="car.year"></td>
-                            <td class="p-3">
-                                <span class="font-bold block" x-text="car.make"></span>
-                                <span class="text-gray-500" x-text="car.model"></span>
-                            </td>
-                            <td class="p-3 text-gray-400">---</td>
-                            <td class="p-3" x-text="car.mileage"></td>
-                            <td class="p-3 font-bold text-blue-700" x-text="car.price"></td>
-                            <td class="p-3 text-blue-600 font-bold" x-text="car.wholesale_diff"></td>
-                            <td class="p-3 text-green-600 font-bold" x-text="car.market_diff"></td>
-                            <td class="p-3" x-text="car.city"></td>
-                            <td class="p-3">
-                                <a :href="car.url" target="_blank" class="bg-gray-800 text-white px-3 py-1 rounded text-xs">View</a>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-        </div>
+        <!-- Error Alert -->
+        <template x-if="errorMessage">
+            <div class="bg-red-900/20 border border-red-500/50 text-red-200 p-4 rounded-xl mb-6 flex justify-between">
+                <span x-text="errorMessage"></span>
+                <button @click="errorMessage = ''" class="font-bold">&times;</button>
+            </div>
+        </template>
 
-        <!-- Manual Add Section -->
-        <div class="mt-8 bg-white p-6 rounded-lg shadow-sm border">
-            <h2 class="font-bold text-gray-700 mb-4 uppercase text-xs tracking-widest">Add listing manually</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                <input x-model="manual.url" placeholder="URL" class="border p-2 rounded text-xs col-span-2">
-                <input x-model="manual.year" placeholder="Year" class="border p-2 rounded text-xs">
-                <input x-model="manual.model" placeholder="Model" class="border p-2 rounded text-xs">
-                <input x-model="manual.price" placeholder="Price" class="border p-2 rounded text-xs">
-                <input x-model="manual.mileage" placeholder="Mileage" class="border p-2 rounded text-xs">
-                <button @click="addManual" class="bg-green-600 text-white font-bold rounded text-xs">ADD</button>
+        <!-- Data Table -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-zinc-950 text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-zinc-800">
+                        <tr>
+                            <th class="p-5">Vehicle</th>
+                            <th class="p-5">Source</th>
+                            <th class="p-5">Mileage</th>
+                            <th class="p-5">Price</th>
+                            <th class="p-5 text-blue-400">vs Wholesale</th>
+                            <th class="p-5 text-green-400">vs Market</th>
+                            <th class="p-5">Location</th>
+                            <th class="p-5 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-800">
+                        <template x-for="car in results" :key="car.url">
+                            <tr class="hover:bg-zinc-800/40 transition-colors group">
+                                <td class="p-5">
+                                    <div class="flex items-center gap-4">
+                                        <img :src="car.photo" class="w-20 h-14 object-cover rounded-lg bg-zinc-800 shadow-lg">
+                                        <div>
+                                            <div class="text-xs font-bold text-zinc-500" x-text="car.year"></div>
+                                            <div class="font-black text-white group-hover:text-blue-400 transition-colors">
+                                                <span x-text="car.make"></span> <span x-text="car.model"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-5"><span class="px-2 py-1 bg-zinc-800 rounded text-[10px] font-bold" x-text="car.source"></span></td>
+                                <td class="p-5 font-medium text-zinc-300" x-text="car.mileage"></td>
+                                <td class="p-5 font-black text-white text-lg" x-text="car.price"></td>
+                                <td class="p-5"><span class="text-blue-400 font-bold" x-text="car.wholesale_diff"></span></td>
+                                <td class="p-5"><span class="text-green-400 font-bold" x-text="car.market_diff"></span></td>
+                                <td class="p-5 text-zinc-400 text-xs" x-text="car.city"></td>
+                                <td class="p-5 text-right">
+                                    <a :href="car.url" target="_blank" class="inline-block bg-white text-black font-black px-4 py-2 rounded-lg text-xs hover:bg-blue-500 hover:text-white transition-all shadow-lg">VIEW DEAL</a>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -142,43 +158,36 @@
         function vehicleApp() {
             return {
                 loading: false,
+                errorMessage: '',
                 form: {
                     postal: 'M5V 1J2',
-                    radius: 50,
+                    radius: 100,
                     privateOnly: false,
                     make: 'All',
-                    minYear: '',
-                    maxYear: '',
-                    maxPrice: '',
-                    maxMileage: '',
-                    newOnly: false
+                    maxPrice: 60000
                 },
                 results: [],
-                manual: { url: '', year: '', model: '', price: '', mileage: '' },
                 async scanDeals() {
                     this.loading = true;
+                    this.errorMessage = '';
+                    this.results = [];
                     try {
                         const response = await fetch('/scan', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(this.form)
                         });
-                        this.results = await response.json();
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            this.results = data;
+                        } else {
+                            this.errorMessage = `Error: ${data.message || 'Unknown error'}`;
+                        }
                     } catch (e) {
-                        alert('Scan failed. Check console.');
+                        this.errorMessage = "Failed to connect to the server. Check Railway logs.";
                     }
                     this.loading = false;
-                },
-                addManual() {
-                    this.results.push({
-                        ...this.manual,
-                        source: 'Manual',
-                        photo: 'https://via.placeholder.com/64x48?text=No+Photo',
-                        wholesale_diff: 'N/A',
-                        market_diff: 'N/A',
-                        city: 'Manual'
-                    });
-                    this.manual = { url: '', year: '', model: '', price: '', mileage: '' };
                 }
             }
         }
