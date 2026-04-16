@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Finder — Ontario Deals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+</head>
+<body class="bg-gray-50 text-sm">
+
+    <div x-data="vehicleApp()" class="max-w-7xl mx-auto p-4">
+        <!-- Header -->
+        <header class="mb-6">
+            <h1 class="text-2xl font-bold text-slate-800">Vehicle Finder — Ontario Deals</h1>
+        </header>
+
+        <!-- Top Control Bar -->
+        <div class="bg-white p-4 rounded-lg shadow-sm border mb-4 flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">POSTAL CODE</label>
+                <input x-model="form.postal" type="text" placeholder="A1A 1A1" class="border p-2 rounded w-32 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">RADIUS (KM)</label>
+                <input x-model="form.radius" type="number" class="border p-2 rounded w-24 outline-none">
+            </div>
+            <div class="flex items-center self-center mt-6">
+                <input x-model="form.privateOnly" type="checkbox" id="private" class="mr-2 h-4 w-4">
+                <label for="private" class="font-medium">Private Only</label>
+            </div>
+            <button @click="scanDeals" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded ml-auto flex items-center">
+                <template x-if="loading">
+                    <svg class="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full" viewBox="0 0 24 24"></svg>
+                </template>
+                SCAN NOW
+            </button>
+        </div>
+
+        <!-- Secondary Filter Bar -->
+        <div class="bg-white p-4 rounded-lg shadow-sm border mb-6 grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">MANUFACTURER</label>
+                <select x-model="form.make" class="w-full border p-2 rounded outline-none">
+                    <option value="All">All Makes</option>
+                    <option value="Ford">Ford</option>
+                    <option value="Honda">Honda</option>
+                    <option value="Toyota">Toyota</option>
+                    <option value="BMW">BMW</option>
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <div class="w-1/2">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">MIN YEAR</label>
+                    <input x-model="form.minYear" type="number" placeholder="2010" class="w-full border p-2 rounded">
+                </div>
+                <div class="w-1/2">
+                    <label class="block text-xs font-bold text-gray-500 mb-1">MAX YEAR</label>
+                    <input x-model="form.maxYear" type="number" placeholder="2024" class="w-full border p-2 rounded">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">MAX PRICE ($)</label>
+                <input x-model="form.maxPrice" type="number" class="w-full border p-2 rounded">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">MAX MILEAGE (KM)</label>
+                <input x-model="form.maxMileage" type="number" class="w-full border p-2 rounded">
+            </div>
+            <div class="flex items-center mt-5">
+                <input x-model="form.newOnly" type="checkbox" id="newOnly" class="mr-2">
+                <label for="newOnly">New Only</label>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">SORT BY</label>
+                <select class="w-full border p-2 rounded outline-none">
+                    <option>Best Deal</option>
+                    <option>Price: Low-High</option>
+                    <option>Price: High-Low</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-100 text-gray-600 text-xs font-bold">
+                    <tr>
+                        <th class="p-3">PHOTO</th>
+                        <th class="p-3">SOURCE</th>
+                        <th class="p-3">YEAR</th>
+                        <th class="p-3">MAKE/MODEL</th>
+                        <th class="p-3">TRIM</th>
+                        <th class="p-3">MILEAGE</th>
+                        <th class="p-3">PRICE</th>
+                        <th class="p-3 text-blue-600">vs WHOLESALE</th>
+                        <th class="p-3 text-green-600">vs MARKET</th>
+                        <th class="p-3">CITY</th>
+                        <th class="p-3">LINK</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    <template x-for="car in results" :key="car.url">
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="p-3"><img :src="car.photo" class="w-16 h-12 object-cover rounded shadow-sm"></td>
+                            <td class="p-3 font-medium text-xs" x-text="car.source"></td>
+                            <td class="p-3" x-text="car.year"></td>
+                            <td class="p-3">
+                                <span class="font-bold block" x-text="car.make"></span>
+                                <span class="text-gray-500" x-text="car.model"></span>
+                            </td>
+                            <td class="p-3 text-gray-400">---</td>
+                            <td class="p-3" x-text="car.mileage"></td>
+                            <td class="p-3 font-bold text-blue-700" x-text="car.price"></td>
+                            <td class="p-3 text-blue-600 font-bold" x-text="car.wholesale_diff"></td>
+                            <td class="p-3 text-green-600 font-bold" x-text="car.market_diff"></td>
+                            <td class="p-3" x-text="car.city"></td>
+                            <td class="p-3">
+                                <a :href="car.url" target="_blank" class="bg-gray-800 text-white px-3 py-1 rounded text-xs">View</a>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Manual Add Section -->
+        <div class="mt-8 bg-white p-6 rounded-lg shadow-sm border">
+            <h2 class="font-bold text-gray-700 mb-4 uppercase text-xs tracking-widest">Add listing manually</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                <input x-model="manual.url" placeholder="URL" class="border p-2 rounded text-xs col-span-2">
+                <input x-model="manual.year" placeholder="Year" class="border p-2 rounded text-xs">
+                <input x-model="manual.model" placeholder="Model" class="border p-2 rounded text-xs">
+                <input x-model="manual.price" placeholder="Price" class="border p-2 rounded text-xs">
+                <input x-model="manual.mileage" placeholder="Mileage" class="border p-2 rounded text-xs">
+                <button @click="addManual" class="bg-green-600 text-white font-bold rounded text-xs">ADD</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function vehicleApp() {
+            return {
+                loading: false,
+                form: {
+                    postal: 'M5V 1J2',
+                    radius: 50,
+                    privateOnly: false,
+                    make: 'All',
+                    minYear: '',
+                    maxYear: '',
+                    maxPrice: '',
+                    maxMileage: '',
+                    newOnly: false
+                },
+                results: [],
+                manual: { url: '', year: '', model: '', price: '', mileage: '' },
+                async scanDeals() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/scan', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.form)
+                        });
+                        this.results = await response.json();
+                    } catch (e) {
+                        alert('Scan failed. Check console.');
+                    }
+                    this.loading = false;
+                },
+                addManual() {
+                    this.results.push({
+                        ...this.manual,
+                        source: 'Manual',
+                        photo: 'https://via.placeholder.com/64x48?text=No+Photo',
+                        wholesale_diff: 'N/A',
+                        market_diff: 'N/A',
+                        city: 'Manual'
+                    });
+                    this.manual = { url: '', year: '', model: '', price: '', mileage: '' };
+                }
+            }
+        }
+    </script>
+</body>
+</html>
